@@ -1,0 +1,66 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+from matplotlib import cm
+from scipy.stats import multivariate_normal
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
+%matplotlib inline
+plt.rcParams['figure.figsize'] = (15.0, 12) # set default size of plots
+plt.rcParams['image.interpolation'] = 'nearest'
+plt.rcParams['image.cmap'] = 'gray'
+
+# %load_ext autoreload
+# %autoreload 2
+# Ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+#find the mean and std, this plots the graph
+
+data = pd.read_csv('data/bivariate_normal_data.csv')
+x = np.linspace(-3,3,200)
+y = np.linspace(-5,5,200)
+XX, YY = np.meshgrid(x,y)
+
+pos = np.empty(XX.shape + (2,))
+pos[:, :, 0] = XX; pos[:, :, 1] = YY
+
+from scipy.stats import multivariate_normal
+mu1 = 0.51113139
+mu2 = -2.0159914
+
+mu_vec = np.array([mu1, mu2])
+sigma_matrix = np.array([[0.93302132, 0.6619576],[0.6619576, 0.99689616]])
+F = multivariate_normal(mu_vec, sigma_matrix)
+Z = F.pdf(pos)
+X, Y = data['x'], data['y']
+#finding P(0.14<=X<=0.15)
+XY = np.column_stack([X, Y])
+X1 = []
+Y1 = []
+Z1 = []
+for i in range(data.shape[0]):
+    z = F.pdf(XY[i])
+    if(z <= 0.15 and z >=0.14):
+        X1.append(XY[i][0])
+        Y1.append(XY[i][1])
+        Z1.append(z)
+
+X1 = np.array(X1)
+Y1 = np.array(Y1)
+Z1 = np.array(Z1)
+
+#Make a 3D plot
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.scatter(X1, Y1, Z1, c='r', marker='o')
+ax.plot_surface(XX, YY, Z, rstride=3, cstride=3, linewidth=1, antialiased=True,
+                cmap=cm.viridis, alpha=0.5)
+#                 cmap=cm.coolwarm, alpha=0.5)
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+
+plt.show()
